@@ -1,0 +1,27 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  # Replace this with your site URL
+  PUBLIC_URL: /appier-3d-demo/
+
+build:
+  image: node:15
+  stage: build
+  script:
+    - echo "build"
+  artifacts:
+    paths:
+      - dist/
+
+pages:
+  image: alpine:latest
+  stage: deploy
+  script:
+    - echo "deploy"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
