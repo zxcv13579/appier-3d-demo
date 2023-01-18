@@ -122,11 +122,13 @@ class Effect {
     this.app.ticker.add((delta) => {
       if (!this.executed) return;
       this.t += Math.PI / 120;
+      document.querySelector("#t").textContent = `t: ${this.t}`;
+      document.querySelector(
+        "#sin"
+      ).innerHTML = `Math.sin(t): 介於 -1 ~ 1 之間, <br>${Math.sin(
+        this.t
+      )}<br>`;
       if (this.state.animations.horizontal) {
-        // this.displacementFilter1.scale.x =
-        //   this.displacementFilter1.scale.x -
-        //   Math.sin(this.t) * this.state.animations.swing;
-
         [this.displacementFilter1, this.displacementFilter2].forEach(
           (displacementFilter) => {
             displacementFilter.scale.x =
@@ -136,9 +138,6 @@ class Effect {
         );
       }
       if (this.state.animations.vertical) {
-        // this.displacementFilter1.scale.y =
-        //   this.displacementFilter1.scale.y -
-        //   Math.sin(this.t) * this.state.animations.swing;
         [this.displacementFilter1, this.displacementFilter2].forEach(
           (displacementFilter) => {
             displacementFilter.scale.y =
