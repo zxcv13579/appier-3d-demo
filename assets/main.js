@@ -3,10 +3,6 @@ const scenes = {
     width: 768,
     height: 432,
   },
-  scene2: {
-    width: 500,
-    height: 666,
-  },
 };
 
 const config = {
@@ -18,14 +14,6 @@ const config = {
     {
       name: "scene_1_mask",
       url: "./assets/images/pikachu-2.jpg",
-    },
-    {
-      name: "scene_2_img",
-      url: "./assets/images/dog-1.jpeg",
-    },
-    {
-      name: "scene_2_mask",
-      url: "./assets/images/dog-2.jpeg",
     },
   ],
 };
@@ -41,9 +29,6 @@ class Effect {
   scene1 = new PIXI.Container();
   scene_1_img;
   scene_1_mask;
-  scene2 = new PIXI.Container();
-  scene_2_img;
-  scene_2_mask;
   displacementFilter;
   gui = new GUI();
   guiInterface = this.gui.gui;
@@ -54,7 +39,7 @@ class Effect {
   constructor() {
     this.create = this.create.bind(this);
     this.setDelta = this.setDelta.bind(this);
-    this.setSceneCheck = this.setSceneCheck.bind(this);
+
     this.setAnimationCheck = this.setAnimationCheck.bind(this);
     this.setDirectionCheck = this.setDirectionCheck.bind(this);
     this.setResize = this.setResize.bind(this);
@@ -96,68 +81,28 @@ class Effect {
 
     this.scene1.filters = [this.displacementFilter1];
 
-    // 場景 2
-    this.app.stage.addChild(this.scene2);
-    this.scene2.visible = false;
-    this.scene_2_img = new PIXI.Sprite(resource.scene_2_img.texture);
-    this.scene_2_img.width = scenes.scene2.width;
-    this.scene_2_img.height = scenes.scene2.height;
-
-    this.scene_2_mask = new PIXI.Sprite.from(resource.scene_2_mask.texture);
-    this.scene_2_mask.width = scenes.scene2.width;
-    this.scene_2_mask.height = scenes.scene2.height;
-
-    this.displacementFilter2 = new PIXI.filters.DisplacementFilter(
-      this.scene_2_mask
-    );
-
-    this.displacementFilter2.scale.x = 0;
-    this.displacementFilter2.scale.y = 0;
-
-    this.scene2.addChild(this.scene_2_mask);
-    this.scene2.addChild(this.scene_2_img);
-
-    this.scene2.filters = [this.displacementFilter2];
-
     this.app.ticker.add((delta) => {
       if (!this.executed) return;
       this.t += Math.PI / 120;
-      document.querySelector("#t").textContent = `t: ${this.t}`;
-      document.querySelector(
-        "#sin"
-      ).innerHTML = `Math.sin(t): 介於 -1 ~ 1 之間, <br>${Math.sin(
-        this.t
-      )}<br>`;
+
       if (this.state.animations.horizontal) {
-        [this.displacementFilter1, this.displacementFilter2].forEach(
-          (displacementFilter) => {
-            displacementFilter.scale.x =
-              displacementFilter.scale.x -
-              Math.sin(this.t) * this.state.animations.swing;
-          }
-        );
+        [this.displacementFilter1].forEach((displacementFilter) => {
+          displacementFilter.scale.x =
+            displacementFilter.scale.x -
+            Math.sin(this.t) * this.state.animations.swing;
+        });
       }
       if (this.state.animations.vertical) {
-        [this.displacementFilter1, this.displacementFilter2].forEach(
-          (displacementFilter) => {
-            displacementFilter.scale.y =
-              displacementFilter.scale.y -
-              Math.sin(this.t) * this.state.animations.swing;
-          }
-        );
+        [this.displacementFilter1].forEach((displacementFilter) => {
+          displacementFilter.scale.y =
+            displacementFilter.scale.y -
+            Math.sin(this.t) * this.state.animations.swing;
+        });
       }
     });
 
     // handle gui
     document.querySelector("#tool").append(this.guiInterface.domElement);
-
-    const scenesFolder = this.guiInterface.addFolder("scene");
-    for (let scene in this.state.scenes) {
-      scenesFolder
-        .add(this.state.scenes, scene)
-        .listen()
-        .onChange(() => this.setSceneCheck(scene));
-    }
 
     this.guiInterface
       .addFolder("displacementFilter")
@@ -199,23 +144,6 @@ class Effect {
     this.t = 0;
     this.displacementFilter1.scale.x = 0;
     this.displacementFilter1.scale.y = 0;
-    this.displacementFilter2.scale.x = 0;
-    this.displacementFilter2.scale.y = 0;
-  }
-  setSceneCheck(prop) {
-    for (let scene in this.state.scenes) {
-      this.state.scenes[scene] = false;
-    }
-    this.state.scenes[prop] = true;
-    if (prop === "scene1") {
-      this.scene1.visible = true;
-      this.scene2.visible = false;
-      this.setResize({ ...scenes.scene1 });
-    } else {
-      this.scene2.visible = true;
-      this.scene1.visible = false;
-      this.setResize({ ...scenes.scene2 });
-    }
   }
   setResize({ width, height }) {
     this.app.renderer.resize(width, height);
@@ -243,25 +171,16 @@ class Effect {
     if (!this.toggle) return;
     this.executed = false;
     if (this.state.events.horizontal) {
-      [this.displacementFilter1, this.displacementFilter2].forEach(
-        (displacementFilter) => {
-          displacementFilter.scale.x =
-            (this.width / 2 - e.clientX) / this.state.events.depth;
-        }
-      );
-
-      // this.displacementFilter1.scale.x =
-      //   (this.width / 2 - e.clientX) / this.state.events.depth;
+      [this.displacementFilter1].forEach((displacementFilter) => {
+        displacementFilter.scale.x =
+          (this.width / 2 - e.clientX) / this.state.events.depth;
+      });
     }
     if (this.state.events.vertical) {
-      // this.displacementFilter1.scale.y =
-      //   (this.height / 2 - e.clientY) / this.state.events.depth;
-      [this.displacementFilter1, this.displacementFilter2].forEach(
-        (displacementFilter) => {
-          displacementFilter.scale.y =
-            (this.height / 2 - e.clientY) / this.state.events.depth;
-        }
-      );
+      [this.displacementFilter1].forEach((displacementFilter) => {
+        displacementFilter.scale.y =
+          (this.height / 2 - e.clientY) / this.state.events.depth;
+      });
     }
   }
 
