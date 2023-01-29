@@ -19,3 +19,9 @@ img {
 .logo {
   width: 100%;
 }
+
+.btn {
+  margin: 1.25rem 0;
+  display: flex;
+  gap: 1rem;
+}

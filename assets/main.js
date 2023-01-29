@@ -1,3 +1,23 @@
+const initialValue = {
+  origin: "",
+  deep: "",
+  width: "",
+  height: "",
+};
+
+Array.prototype.slice
+  .call(document.querySelectorAll('input[type="file"'))
+  .forEach(function (el) {
+    el.addEventListener("change", fileChange);
+  });
+function fileChange(e) {
+  const id = e.target.id;
+  const file = e.target.files[0];
+  console.log(file);
+  const objUrl = URL.createObjectURL(file);
+  initialValue[id] = objUrl;
+}
+
 const scenes = {
   scene1: {
     width: 768,
