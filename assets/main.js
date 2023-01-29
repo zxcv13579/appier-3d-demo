@@ -5,11 +5,19 @@ const initialValue = {
   height: "",
 };
 
+// bind event
 Array.prototype.slice
   .call(document.querySelectorAll('input[type="file"'))
   .forEach(function (el) {
     el.addEventListener("change", fileChange);
   });
+document.querySelector("#start").addEventListener("click", function () {
+  if (initialValue.origin && initialValue.deep) {
+    const pixi = new Effect();
+    pixi.init();
+  }
+});
+
 function fileChange(e) {
   const id = e.target.id;
   const file = e.target.files[0];
@@ -26,37 +34,17 @@ function getImgInfo(url) {
   img.src = url;
 }
 
-const scenes = {
-  scene1: {
-    width: 768,
-    height: 432,
-  },
-};
-
-const config = {
-  loader: [
-    {
-      name: "scene_1_img",
-      url: "./assets/images/pikachu-1.jpg",
-    },
-    {
-      name: "scene_1_mask",
-      url: "./assets/images/pikachu-2.jpg",
-    },
-  ],
-};
-
 class Effect {
   container = document.querySelector("#container");
-  width = 768;
-  height = 432;
+  width = initialValue.width;
+  height = initialValue.height;
   t = 0;
   executed = true;
   toggle = true;
   app = new PIXI.Application({ width: this.width, height: this.height });
-  scene1 = new PIXI.Container();
-  scene_1_img;
-  scene_1_mask;
+  scene = new PIXI.Container();
+  scene_origin;
+  scene_deep;
   displacementFilter;
   gui = new GUI();
   guiInterface = this.gui.gui;
@@ -83,51 +71,57 @@ class Effect {
     this.container.style.height = `${this.height}px`;
     this.container.appendChild(this.app.view);
 
-    this.loader = new Loader(this.app.loader, config);
-    this.loader.preload().then((resource) => this.create(resource));
+    this.app.loader.add("origin", initialValue.origin);
+    this.app.loader.add("deep", initialValue.deep);
+    this.app.loader.load((loader, resource) => this.create());
+
+    // this.loader = new Loader(this.app.loader, config);
+    // this.loader.preload().then((resource) => this.create(resource));
   }
   create(resource) {
     // 場景 1
-    this.app.stage.addChild(this.scene1);
-    this.scene_1_img = new PIXI.Sprite(resource.scene_1_img.texture);
-    this.scene_1_img.width = scenes.scene1.width;
-    this.scene_1_img.height = scenes.scene1.height;
+    this.app.stage.addChild(this.scene);
+    this.scene_origin = new PIXI.Sprite(
+      new PIXI.Texture.from(initialValue.origin)
+    );
+    this.scene_origin.width = initialValue.width;
+    this.scene_origin.height = initialValue.height;
 
-    this.scene_1_mask = new PIXI.Sprite.from(resource.scene_1_mask.texture);
-    this.scene_1_mask.width = scenes.scene1.width;
-    this.scene_1_mask.height = scenes.scene1.height;
+    this.scene_deep = new PIXI.Sprite(new PIXI.Texture.from(initialValue.deep));
+    this.scene_deep.width = initialValue.width;
+    this.scene_deep.height = initialValue.height;
 
     this.displacementFilter1 = new PIXI.filters.DisplacementFilter(
-      this.scene_1_mask
+      this.scene_deep
     );
 
     this.displacementFilter1.scale.x = 0;
     this.displacementFilter1.scale.y = 0;
 
-    this.scene1.addChild(this.scene_1_mask);
-    this.scene1.addChild(this.scene_1_img);
+    this.scene.addChild(this.scene_deep);
+    this.scene.addChild(this.scene_origin);
 
-    this.scene1.filters = [this.displacementFilter1];
+    this.scene.filters = [this.displacementFilter1];
 
-    this.app.ticker.add((delta) => {
-      if (!this.executed) return;
-      this.t += Math.PI / 120;
+    // this.app.ticker.add((delta) => {
+    //   if (!this.executed) return;
+    //   this.t += Math.PI / 120;
 
-      if (this.state.animations.horizontal) {
-        [this.displacementFilter1].forEach((displacementFilter) => {
-          displacementFilter.scale.x =
-            displacementFilter.scale.x -
-            Math.sin(this.t) * this.state.animations.swing;
-        });
-      }
-      if (this.state.animations.vertical) {
-        [this.displacementFilter1].forEach((displacementFilter) => {
-          displacementFilter.scale.y =
-            displacementFilter.scale.y -
-            Math.sin(this.t) * this.state.animations.swing;
-        });
-      }
-    });
+    //   if (this.state.animations.horizontal) {
+    //     [this.displacementFilter1].forEach((displacementFilter) => {
+    //       displacementFilter.scale.x =
+    //         displacementFilter.scale.x -
+    //         Math.sin(this.t) * this.state.animations.swing;
+    //     });
+    //   }
+    //   if (this.state.animations.vertical) {
+    //     [this.displacementFilter1].forEach((displacementFilter) => {
+    //       displacementFilter.scale.y =
+    //         displacementFilter.scale.y -
+    //         Math.sin(this.t) * this.state.animations.swing;
+    //     });
+    //   }
+    // });
 
     // handle gui
     document.querySelector("#tool").append(this.guiInterface.domElement);
@@ -217,7 +211,7 @@ class Effect {
   }
 }
 
-window.addEventListener("load", function () {
-  const pixi = new Effect();
-  pixi.init();
-});
+// window.addEventListener("load", function () {
+//   const pixi = new Effect();
+//   pixi.init();
+// });
