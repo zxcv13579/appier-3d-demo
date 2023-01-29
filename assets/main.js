@@ -13,9 +13,17 @@ Array.prototype.slice
 function fileChange(e) {
   const id = e.target.id;
   const file = e.target.files[0];
-  console.log(file);
   const objUrl = URL.createObjectURL(file);
   initialValue[id] = objUrl;
+  getImgInfo(objUrl);
+}
+function getImgInfo(url) {
+  const img = new Image();
+  img.onload = function () {
+    initialValue.width = this.width;
+    initialValue.height = this.height;
+  };
+  img.src = url;
 }
 
 const scenes = {
