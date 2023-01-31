@@ -1,4 +1,6 @@
 const initialValue = {
+  o: "",
+  d: "",
   origin: "",
   deep: "",
   width: "",
@@ -21,6 +23,13 @@ document.querySelector("#start").addEventListener("click", function () {
 function fileChange(e) {
   const id = e.target.id;
   const file = e.target.files[0];
+
+  if (id === "origin") {
+    document.querySelector("#o").textContent = file.name;
+  } else {
+    document.querySelector("#d").textContent = file.name;
+  }
+
   const objUrl = URL.createObjectURL(file);
   initialValue[id] = objUrl;
   getImgInfo(objUrl);
@@ -49,7 +58,7 @@ class Effect {
   gui = new GUI();
   guiInterface = this.gui.gui;
   state = this.gui.state;
-  tl = gsap.timeline({ repeat: -1 });
+  tl = null;
   loader;
   min;
   max;
@@ -157,7 +166,10 @@ class Effect {
   }
 
   loop() {
-    const direction = this.state.events.horizontal ? "x" : "y";
+    const direction = this.state.animations.horizontal ? "x" : "y";
+    this.displacementFilter.scale.x = 0;
+    this.displacementFilter.scale.y = 0;
+    this.tl = gsap.timeline({ repeat: -1 });
     this.tl
       .to(this.displacementFilter.scale, {
         [direction]: this.min,
@@ -177,10 +189,11 @@ class Effect {
   }
 
   setDepth() {
-    this.t = 0;
+    this.tl.kill();
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
     this.calculateMinAndMax();
+    this.loop();
   }
   setResize({ width, height }) {
     this.app.renderer.resize(width, height);
@@ -193,6 +206,12 @@ class Effect {
       this.state.animations[animation] = false;
     }
     this.state.animations[prop] = true;
+    if (prop === "none") {
+      this.tl.kill();
+      this.displacementFilter.scale.x = 0;
+      this.displacementFilter.scale.y = 0;
+      return;
+    }
     this.setDepth();
   }
   setDirectionCheck(prop) {
@@ -201,13 +220,18 @@ class Effect {
       this.state.events[event] = false;
     }
     this.state.events[prop] = true;
+    if (prop === "none") return;
     this.setDepth();
   }
   onPointerMove(e) {
-    this.executed = false;
-    if (!this.tl.paused()) {
-      this.tl.paused(true);
+    if (this.state.events.none) return;
+    if (this.executed) {
+      this.tl.kill();
     }
+    this.executed = false;
+    // if (!this.tl.paused()) {
+    //   this.tl.paused(true);
+    // }
     if (this.state.events.horizontal) {
       this.displacementFilter.scale.x =
         (this.width / 2 - e.clientX) / this.state.events.depth;
@@ -218,14 +242,14 @@ class Effect {
     }
   }
   onPointerOut() {
+    if (this.state.animations.none || this.state.events.none) return;
     this.executed = true;
-    this.tl.restart();
+    this.loop();
   }
   calculateMinAndMax() {
     const direction = this.state.events.horizontal ? "horizontal" : "vertical";
     const target = direction === "horizontal" ? this.width : this.height;
     this.min = target / 2 / this.state.events.depth;
     this.max = (target / 2 - target) / this.state.events.depth;
-    console.log(this.min, this.max);
   }
 }
