@@ -49,12 +49,14 @@ class Effect {
   gui = new GUI();
   guiInterface = this.gui.gui;
   state = this.gui.state;
-  tl = gsap.timeline();
+  tl = gsap.timeline({ repeat: -1 });
   loader;
+  min;
+  max;
 
   constructor() {
     this.create = this.create.bind(this);
-    this.setDelta = this.setDelta.bind(this);
+    this.setDepth = this.setDepth.bind(this);
 
     this.setAnimationCheck = this.setAnimationCheck.bind(this);
     this.setDirectionCheck = this.setDirectionCheck.bind(this);
@@ -74,9 +76,6 @@ class Effect {
     this.app.loader.add("origin", initialValue.origin);
     this.app.loader.add("deep", initialValue.deep);
     this.app.loader.load((loader, resource) => this.create());
-
-    // this.loader = new Loader(this.app.loader, config);
-    // this.loader.preload().then((resource) => this.create(resource));
   }
   create(resource) {
     // 場景 1
@@ -91,31 +90,33 @@ class Effect {
     this.scene_deep.width = initialValue.width;
     this.scene_deep.height = initialValue.height;
 
-    this.displacementFilter1 = new PIXI.filters.DisplacementFilter(
+    this.displacementFilter = new PIXI.filters.DisplacementFilter(
       this.scene_deep
     );
 
-    this.displacementFilter1.scale.x = 0;
-    this.displacementFilter1.scale.y = 0;
+    this.displacementFilter.scale.x = 0;
+    this.displacementFilter.scale.y = 0;
+
+    this.calculateMinAndMax();
 
     this.scene.addChild(this.scene_deep);
     this.scene.addChild(this.scene_origin);
 
-    this.scene.filters = [this.displacementFilter1];
+    this.scene.filters = [this.displacementFilter];
 
     // this.app.ticker.add((delta) => {
     //   if (!this.executed) return;
     //   this.t += Math.PI / 120;
 
     //   if (this.state.animations.horizontal) {
-    //     [this.displacementFilter1].forEach((displacementFilter) => {
+    //     [this.displacementFilter].forEach((displacementFilter) => {
     //       displacementFilter.scale.x =
     //         displacementFilter.scale.x -
     //         Math.sin(this.t) * this.state.animations.swing;
     //     });
     //   }
     //   if (this.state.animations.vertical) {
-    //     [this.displacementFilter1].forEach((displacementFilter) => {
+    //     [this.displacementFilter].forEach((displacementFilter) => {
     //       displacementFilter.scale.y =
     //         displacementFilter.scale.y -
     //         Math.sin(this.t) * this.state.animations.swing;
@@ -125,15 +126,6 @@ class Effect {
 
     // handle gui
     document.querySelector("#tool").append(this.guiInterface.domElement);
-
-    this.guiInterface
-      .addFolder("displacementFilter")
-      .add(this.state.displacementFilter, "enabled")
-      .listen()
-      .onChange(
-        () =>
-          (this.displacementFilter1.enabled = !this.displacementFilter1.enabled)
-      );
 
     const animationFolder = this.guiInterface.addFolder("動畫控制");
     for (let animation in this.state.animations) {
@@ -146,7 +138,7 @@ class Effect {
     animationFolder
       .add(this.state.animations, "swing", 0, 2)
       .listen()
-      .onChange(this.setDelta);
+      .onChange(this.setDepth);
 
     const eventsFolder = this.guiInterface.addFolder("手指、滑鼠事件");
     for (let direction in this.state.events) {
@@ -159,13 +151,36 @@ class Effect {
     eventsFolder
       .add(this.state.events, "depth", -100, 100)
       .listen()
-      .onChange(this.setDelta);
+      .onChange(this.setDepth);
+
+    this.loop();
   }
 
-  setDelta() {
+  loop() {
+    const direction = this.state.events.horizontal ? "x" : "y";
+    this.tl
+      .to(this.displacementFilter.scale, {
+        [direction]: this.min,
+        duration: 0.25,
+        ease: "linear",
+      })
+      .to(this.displacementFilter.scale, {
+        [direction]: this.max,
+        duration: 0.5,
+        ease: "linear",
+      })
+      .to(this.displacementFilter.scale, {
+        [direction]: 0,
+        duration: 0.25,
+        ease: "linear",
+      });
+  }
+
+  setDepth() {
     this.t = 0;
-    this.displacementFilter1.scale.x = 0;
-    this.displacementFilter1.scale.y = 0;
+    this.displacementFilter.scale.x = 0;
+    this.displacementFilter.scale.y = 0;
+    this.calculateMinAndMax();
   }
   setResize({ width, height }) {
     this.app.renderer.resize(width, height);
@@ -178,7 +193,7 @@ class Effect {
       this.state.animations[animation] = false;
     }
     this.state.animations[prop] = true;
-    this.setDelta();
+    this.setDepth();
   }
   setDirectionCheck(prop) {
     for (let event in this.state.events) {
@@ -186,32 +201,31 @@ class Effect {
       this.state.events[event] = false;
     }
     this.state.events[prop] = true;
-    this.setDelta();
+    this.setDepth();
   }
-
   onPointerMove(e) {
-    if (!this.toggle) return;
     this.executed = false;
+    if (!this.tl.paused()) {
+      this.tl.paused(true);
+    }
     if (this.state.events.horizontal) {
-      [this.displacementFilter1].forEach((displacementFilter) => {
-        displacementFilter.scale.x =
-          (this.width / 2 - e.clientX) / this.state.events.depth;
-      });
+      this.displacementFilter.scale.x =
+        (this.width / 2 - e.clientX) / this.state.events.depth;
     }
     if (this.state.events.vertical) {
-      [this.displacementFilter1].forEach((displacementFilter) => {
-        displacementFilter.scale.y =
-          (this.height / 2 - e.clientY) / this.state.events.depth;
-      });
+      this.displacementFilter.scale.y =
+        (this.height / 2 - e.clientY) / this.state.events.depth;
     }
   }
-
   onPointerOut() {
     this.executed = true;
+    this.tl.restart();
+  }
+  calculateMinAndMax() {
+    const direction = this.state.events.horizontal ? "horizontal" : "vertical";
+    const target = direction === "horizontal" ? this.width : this.height;
+    this.min = target / 2 / this.state.events.depth;
+    this.max = (target / 2 - target) / this.state.events.depth;
+    console.log(this.min, this.max);
   }
 }
-
-// window.addEventListener("load", function () {
-//   const pixi = new Effect();
-//   pixi.init();
-// });

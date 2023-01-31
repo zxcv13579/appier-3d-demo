@@ -23,20 +23,33 @@
       referrerpolicy="no-referrer"
       defer
     ></script>
-
     <script src="./assets/main.js" defer></script>
     <script src="./assets/gui.js" defer></script>
     <script src="./assets/loader.js" defer></script>
     <title>demo</title>
   </head>
   <body>
-    <div class="btn">
-      <p>原圖：</p>
-      <input type="file" accept=".jpg, .jpeg, .png" id="origin" />
-      <p>深度圖：</p>
-      <input type="file" accept=".jpg, .jpeg, .png" id="deep" />
+    <div class="btns">
+      <label class="btn">
+        <p>上傳原圖</p>
+        <input
+          type="file"
+          accept=".jpg, .jpeg, .png"
+          id="origin"
+          style="display: none"
+        />
+      </label>
+      <label class="btn">
+        <p>上傳深度圖</p>
+        <input
+          type="file"
+          accept=".jpg, .jpeg, .png"
+          id="deep"
+          style="display: none"
+        />
+      </label>
+      <button id="start" class="btn">製作</button>
     </div>
-    <button id="start">製作</button>
     <div id="container"></div>
     <div id="tool">
       <img src="./assets/images/logo.jpeg" alt="logo" class="logo" />

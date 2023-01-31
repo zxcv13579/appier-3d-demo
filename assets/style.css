@@ -6,6 +6,10 @@
 img {
   vertical-align: middle;
 }
+canvas {
+  position: relative;
+  z-index: 1;
+}
 #tool {
   position: fixed;
   top: 0;
@@ -19,9 +23,28 @@ img {
 .logo {
   width: 100%;
 }
+body {
+  padding: 1rem;
+}
 
-.btn {
+.btns {
   margin: 1.25rem 0;
   display: flex;
   gap: 1rem;
+}
+.btn {
+  cursor: pointer;
+  background-color: #2353b5;
+  border-radius: 5px;
+  color: white;
+  width: 120px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+}
+button.btn {
+  outline: none;
+  border: none;
 }

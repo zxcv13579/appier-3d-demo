@@ -1,5 +1,8 @@
 class GUI {
-  gui = new dat.GUI({ name: "My GUI" });
+  gui = new dat.GUI({
+    name: "My GUI",
+    domElement: document.querySelector("#tool"),
+  });
   state = {
     scenes: {
       scene1: true,
