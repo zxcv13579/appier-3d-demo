@@ -123,6 +123,7 @@ class Effect {
         .listen()
         .onChange(() => this.setAnimationCheck(animation));
     }
+    animationFolder.open();
 
     const eventsFolder = this.guiInterface.addFolder("手指、滑鼠事件");
     for (let direction in this.state.events) {
@@ -132,9 +133,10 @@ class Effect {
         .listen()
         .onChange(() => this.setDirectionCheck(direction));
     }
+    eventsFolder.open();
+
     this.guiInterface
       .add(this.state.swing, "swing", -100, 100)
-      .listen()
       .onChange(this.setSwing);
 
     this.loop();
