@@ -18,13 +18,12 @@ class GUI {
       none: false,
       horizontal: true,
       vertical: false,
-      swing: 0.2,
     },
     events: {
       none: false,
       horizontal: true,
       vertical: false,
-      depth: 20,
+      swing: 20,
     },
   };
 }

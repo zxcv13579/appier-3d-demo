@@ -138,16 +138,11 @@ class Effect {
 
     const animationFolder = this.guiInterface.addFolder("動畫控制");
     for (let animation in this.state.animations) {
-      if (animation === "swing") continue;
       animationFolder
         .add(this.state.animations, animation)
         .listen()
         .onChange(() => this.setAnimationCheck(animation));
     }
-    animationFolder
-      .add(this.state.animations, "swing", 0, 2)
-      .listen()
-      .onChange(this.setswing);
 
     const eventsFolder = this.guiInterface.addFolder("手指、滑鼠事件");
     for (let direction in this.state.events) {
