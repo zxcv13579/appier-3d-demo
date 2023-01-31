@@ -65,7 +65,7 @@ class Effect {
 
   constructor() {
     this.create = this.create.bind(this);
-    this.setDepth = this.setDepth.bind(this);
+    this.setswing = this.setswing.bind(this);
 
     this.setAnimationCheck = this.setAnimationCheck.bind(this);
     this.setDirectionCheck = this.setDirectionCheck.bind(this);
@@ -147,20 +147,20 @@ class Effect {
     animationFolder
       .add(this.state.animations, "swing", 0, 2)
       .listen()
-      .onChange(this.setDepth);
+      .onChange(this.setswing);
 
     const eventsFolder = this.guiInterface.addFolder("手指、滑鼠事件");
     for (let direction in this.state.events) {
-      if (direction === "depth") continue;
+      if (direction === "swing") continue;
       eventsFolder
         .add(this.state.events, direction)
         .listen()
         .onChange(() => this.setDirectionCheck(direction));
     }
     eventsFolder
-      .add(this.state.events, "depth", -100, 100)
+      .add(this.state.events, "swing", -100, 100)
       .listen()
-      .onChange(this.setDepth);
+      .onChange(this.setswing);
 
     this.loop();
   }
@@ -188,7 +188,7 @@ class Effect {
       });
   }
 
-  setDepth() {
+  setswing() {
     this.tl.kill();
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
@@ -212,16 +212,16 @@ class Effect {
       this.displacementFilter.scale.y = 0;
       return;
     }
-    this.setDepth();
+    this.setswing();
   }
   setDirectionCheck(prop) {
     for (let event in this.state.events) {
-      if (event === "depth") continue;
+      if (event === "swing") continue;
       this.state.events[event] = false;
     }
     this.state.events[prop] = true;
     if (prop === "none") return;
-    this.setDepth();
+    this.setswing();
   }
   onPointerMove(e) {
     if (this.state.events.none) return;
@@ -234,11 +234,11 @@ class Effect {
     // }
     if (this.state.events.horizontal) {
       this.displacementFilter.scale.x =
-        (this.width / 2 - e.clientX) / this.state.events.depth;
+        (this.width / 2 - e.clientX) / this.state.events.swing;
     }
     if (this.state.events.vertical) {
       this.displacementFilter.scale.y =
-        (this.height / 2 - e.clientY) / this.state.events.depth;
+        (this.height / 2 - e.clientY) / this.state.events.swing;
     }
   }
   onPointerOut() {
@@ -249,7 +249,7 @@ class Effect {
   calculateMinAndMax() {
     const direction = this.state.events.horizontal ? "horizontal" : "vertical";
     const target = direction === "horizontal" ? this.width : this.height;
-    this.min = target / 2 / this.state.events.depth;
-    this.max = (target / 2 - target) / this.state.events.depth;
+    this.min = target / 2 / this.state.events.swing;
+    this.max = (target / 2 - target) / this.state.events.swing;
   }
 }
