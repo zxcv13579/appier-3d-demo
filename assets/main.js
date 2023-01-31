@@ -65,7 +65,7 @@ class Effect {
 
   constructor() {
     this.create = this.create.bind(this);
-    this.setswing = this.setswing.bind(this);
+    this.setSwing = this.setSwing.bind(this);
 
     this.setAnimationCheck = this.setAnimationCheck.bind(this);
     this.setDirectionCheck = this.setDirectionCheck.bind(this);
@@ -113,26 +113,6 @@ class Effect {
 
     this.scene.filters = [this.displacementFilter];
 
-    // this.app.ticker.add((delta) => {
-    //   if (!this.executed) return;
-    //   this.t += Math.PI / 120;
-
-    //   if (this.state.animations.horizontal) {
-    //     [this.displacementFilter].forEach((displacementFilter) => {
-    //       displacementFilter.scale.x =
-    //         displacementFilter.scale.x -
-    //         Math.sin(this.t) * this.state.animations.swing;
-    //     });
-    //   }
-    //   if (this.state.animations.vertical) {
-    //     [this.displacementFilter].forEach((displacementFilter) => {
-    //       displacementFilter.scale.y =
-    //         displacementFilter.scale.y -
-    //         Math.sin(this.t) * this.state.animations.swing;
-    //     });
-    //   }
-    // });
-
     // handle gui
     document.querySelector("#tool").append(this.guiInterface.domElement);
 
@@ -152,10 +132,10 @@ class Effect {
         .listen()
         .onChange(() => this.setDirectionCheck(direction));
     }
-    eventsFolder
-      .add(this.state.events, "swing", -100, 100)
+    this.guiInterface
+      .add(this.state.swing, "swing", -100, 100)
       .listen()
-      .onChange(this.setswing);
+      .onChange(this.setSwing);
 
     this.loop();
   }
@@ -183,7 +163,7 @@ class Effect {
       });
   }
 
-  setswing() {
+  setSwing() {
     this.tl.kill();
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
@@ -197,7 +177,6 @@ class Effect {
   }
   setAnimationCheck(prop) {
     for (let animation in this.state.animations) {
-      if (animation === "swing") continue;
       this.state.animations[animation] = false;
     }
     this.state.animations[prop] = true;
@@ -207,7 +186,7 @@ class Effect {
       this.displacementFilter.scale.y = 0;
       return;
     }
-    this.setswing();
+    this.setSwing();
   }
   setDirectionCheck(prop) {
     for (let event in this.state.events) {
@@ -215,25 +194,30 @@ class Effect {
       this.state.events[event] = false;
     }
     this.state.events[prop] = true;
-    if (prop === "none") return;
-    this.setswing();
+    if (prop === "none") {
+      // this.tl.kill();
+      // this.displacementFilter.scale.x = 0;
+      // this.displacementFilter.scale.y = 0;
+      return;
+    }
+    this.setSwing();
   }
   onPointerMove(e) {
     if (this.state.events.none) return;
     if (this.executed) {
       this.tl.kill();
+      this.executed = false;
     }
-    this.executed = false;
     // if (!this.tl.paused()) {
     //   this.tl.paused(true);
     // }
     if (this.state.events.horizontal) {
       this.displacementFilter.scale.x =
-        (this.width / 2 - e.clientX) / this.state.events.swing;
+        (this.width / 2 - e.clientX) / this.state.swing.swing;
     }
     if (this.state.events.vertical) {
       this.displacementFilter.scale.y =
-        (this.height / 2 - e.clientY) / this.state.events.swing;
+        (this.height / 2 - e.clientY) / this.state.swing.swing;
     }
   }
   onPointerOut() {
@@ -244,7 +228,7 @@ class Effect {
   calculateMinAndMax() {
     const direction = this.state.events.horizontal ? "horizontal" : "vertical";
     const target = direction === "horizontal" ? this.width : this.height;
-    this.min = target / 2 / this.state.events.swing;
-    this.max = (target / 2 - target) / this.state.events.swing;
+    this.min = target / 2 / this.state.swing.swing;
+    this.max = (target / 2 - target) / this.state.swing.swing;
   }
 }

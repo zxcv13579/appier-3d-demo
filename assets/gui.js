@@ -12,7 +12,7 @@ class GUI {
       enabled: false,
     },
     swing: {
-      value: 0.2,
+      swing: 20,
     },
     animations: {
       none: false,
@@ -23,7 +23,6 @@ class GUI {
       none: false,
       horizontal: true,
       vertical: false,
-      swing: 20,
     },
   };
 }
