@@ -1,3 +1,13 @@
+const setting = {
+  message: "Appier tool",
+  swing: 20,
+  pointerEvent: false,
+  animations: {
+    none: false,
+    horizontal: true,
+    vertical: false,
+  },
+};
 const initialValue = {
   o: "",
   d: "",
@@ -55,13 +65,17 @@ class Effect {
   scene_origin;
   scene_deep;
   displacementFilter;
-  gui = new GUI();
+  gui = new GUI(setting);
   guiInterface = this.gui.gui;
   state = this.gui.state;
   tl = null;
   loader;
   min;
   max;
+  ax;
+  xMax;
+  yMin;
+  yMax;
 
   constructor() {
     this.create = this.create.bind(this);
@@ -116,28 +130,19 @@ class Effect {
     // handle gui
     document.querySelector("#tool").append(this.guiInterface.domElement);
 
+    this.guiInterface.add(this.state, "message");
+    this.guiInterface
+      .add(this.state, "swing", -100, 100)
+      .onChange(this.setSwing);
+    this.guiInterface
+      .add(this.state, "pointerEvent")
+      .onChange(() => this.setDirectionCheck());
     const animationFolder = this.guiInterface.addFolder("動畫控制");
     for (let animation in this.state.animations) {
       animationFolder
-        .add(this.state.animations, animation)
-        .listen()
+        .add(this.state["animations"], animation)
         .onChange(() => this.setAnimationCheck(animation));
     }
-    animationFolder.open();
-
-    const eventsFolder = this.guiInterface.addFolder("手指、滑鼠事件");
-    for (let direction in this.state.events) {
-      if (direction === "swing") continue;
-      eventsFolder
-        .add(this.state.events, direction)
-        .listen()
-        .onChange(() => this.setDirectionCheck(direction));
-    }
-    eventsFolder.open();
-
-    this.guiInterface
-      .add(this.state.swing, "swing", -100, 100)
-      .onChange(this.setSwing);
 
     this.loop();
   }
@@ -191,46 +196,37 @@ class Effect {
     this.setSwing();
   }
   setDirectionCheck(prop) {
-    for (let event in this.state.events) {
-      if (event === "swing") continue;
-      this.state.events[event] = false;
-    }
-    this.state.events[prop] = true;
-    if (prop === "none") {
-      // this.tl.kill();
-      // this.displacementFilter.scale.x = 0;
-      // this.displacementFilter.scale.y = 0;
+    if (prop) {
       return;
     }
     this.setSwing();
   }
   onPointerMove(e) {
-    if (this.state.events.none) return;
+    if (this.state.pointerEvent) return;
     if (this.executed) {
       this.tl.kill();
       this.executed = false;
     }
-    // if (!this.tl.paused()) {
-    //   this.tl.paused(true);
-    // }
-    if (this.state.events.horizontal) {
-      this.displacementFilter.scale.x =
-        (this.width / 2 - e.clientX) / this.state.swing.swing;
-    }
-    if (this.state.events.vertical) {
-      this.displacementFilter.scale.y =
-        (this.height / 2 - e.clientY) / this.state.swing.swing;
-    }
+    this.displacementFilter.scale.x =
+      (this.width / 2 - e.clientX) / this.state.swing;
+    this.displacementFilter.scale.y =
+      (this.height / 2 - e.clientY) / this.state.swing;
   }
   onPointerOut() {
-    if (this.state.animations.none || this.state.events.none) return;
+    if (this.state.animations.none || this.state.pointerEvent) return;
     this.executed = true;
     this.loop();
   }
   calculateMinAndMax() {
-    const direction = this.state.events.horizontal ? "horizontal" : "vertical";
-    const target = direction === "horizontal" ? this.width : this.height;
-    this.min = target / 2 / this.state.swing.swing;
-    this.max = (target / 2 - target) / this.state.swing.swing;
+    // 要計算 x、y 的 min max
+    this.xMin = this.width / 2 / this.state.swing;
+    this.xMax = (this.width / 2 - this.width) / this.state.swing;
+    this.yMin = this.height / 2 / this.state.swing;
+    this.yMax = (this.height / 2 - this.height) / this.state.swing;
+
+    const isHorizontal = this.state.animations.horizontal ? true : false;
+    this.min = isHorizontal ? this.xMin : this.yMin;
+    this.max = isHorizontal ? this.xMax : this.yMax;
+    console.log(this.min, this.max);
   }
 }
