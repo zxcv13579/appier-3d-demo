@@ -8,7 +8,6 @@ img {
 }
 canvas {
   position: relative;
-  z-index: 1;
 }
 #tool {
   position: fixed;
@@ -16,6 +15,7 @@ canvas {
   right: 0;
   width: 245px;
   height: 100vh;
+  z-index: 99;
 }
 .dg.a {
   margin-right: 0 !important;

@@ -6,7 +6,9 @@ const setting = {
     none: false,
     horizontal: true,
     vertical: false,
+    circle: false,
   },
+  ease: "none.none",
 };
 const initialValue = {
   o: "",
@@ -76,6 +78,8 @@ class Effect {
   xMax;
   yMin;
   yMax;
+  raf;
+  ease;
 
   constructor() {
     this.create = this.create.bind(this);
@@ -86,6 +90,8 @@ class Effect {
     this.setResize = this.setResize.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerOut = this.onPointerOut.bind(this);
+    this.windowRaf = this.windowRaf.bind(this);
+    this.setEase = this.setEase.bind(this);
 
     this.container.addEventListener("mousemove", this.onPointerMove);
     this.container.addEventListener("mouseout", this.onPointerOut);
@@ -141,33 +147,65 @@ class Effect {
     for (let animation in this.state.animations) {
       animationFolder
         .add(this.state["animations"], animation)
+        .listen()
         .onChange(() => this.setAnimationCheck(animation));
     }
+    animationFolder
+      .add(this.state, "ease", {
+        linear: "none.none",
+        easeIn: "power1.in",
+        easeOut: "power1.out",
+      })
+      .onChange((val) => this.setEase(val));
 
     this.loop();
   }
 
-  loop() {
-    const direction = this.state.animations.horizontal ? "x" : "y";
+  setEase(val) {
+    this.ease = val;
+    this.tl.kill();
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
-    this.tl = gsap.timeline({ repeat: -1 });
-    this.tl
-      .to(this.displacementFilter.scale, {
-        [direction]: this.min,
-        duration: 0.25,
-        ease: "linear",
-      })
-      .to(this.displacementFilter.scale, {
-        [direction]: this.max,
-        duration: 0.5,
-        ease: "linear",
-      })
-      .to(this.displacementFilter.scale, {
-        [direction]: 0,
-        duration: 0.25,
-        ease: "linear",
-      });
+    this.calculateMinAndMax();
+    if (this.state.animations.none) return;
+    this.loop();
+  }
+
+  loop() {
+    if (!this.state.animations.circle) {
+      const direction = this.state.animations.horizontal ? "x" : "y";
+      this.displacementFilter.scale.x = 0;
+      this.displacementFilter.scale.y = 0;
+      this.tl = gsap.timeline({ repeat: -1 });
+      this.tl
+        .to(this.displacementFilter.scale, {
+          [direction]: this.min,
+          duration: 0.25,
+          ease: "linear",
+        })
+
+        .to(this.displacementFilter.scale, {
+          [direction]: this.max,
+          duration: 0.5,
+          ease: "linear",
+        })
+        .to(this.displacementFilter.scale, {
+          [direction]: 0,
+          duration: 0.25,
+          ease: "linear",
+        });
+    } else {
+      this.windowRaf();
+    }
+  }
+
+  windowRaf() {
+    const now = window.performance.now();
+    this.displacementFilter.scale = {
+      x: Math.sin((now * Math.PI * 2) / 5 / 1000) * this.max,
+      y: Math.cos((now * Math.PI * 2) / 5 / 1000) * this.max,
+    };
+    this.raf = window.requestAnimationFrame(this.windowRaf);
   }
 
   setSwing() {
@@ -175,6 +213,7 @@ class Effect {
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
     this.calculateMinAndMax();
+    if (this.state.animations.none) return;
     this.loop();
   }
   setResize({ width, height }) {
@@ -189,6 +228,7 @@ class Effect {
     this.state.animations[prop] = true;
     if (prop === "none") {
       this.tl.kill();
+      window.cancelAnimationFrame(this.raf);
       this.displacementFilter.scale.x = 0;
       this.displacementFilter.scale.y = 0;
       return;
@@ -205,6 +245,7 @@ class Effect {
     if (this.state.pointerEvent) return;
     if (this.executed) {
       this.tl.kill();
+      window.cancelAnimationFrame(this.raf);
       this.executed = false;
     }
     this.displacementFilter.scale.x =
@@ -213,8 +254,8 @@ class Effect {
       (this.height / 2 - e.clientY) / this.state.swing;
   }
   onPointerOut() {
-    if (this.state.animations.none || this.state.pointerEvent) return;
     this.executed = true;
+    if (this.state.animations.none || this.state.pointerEvent) return;
     this.loop();
   }
   calculateMinAndMax() {
@@ -227,6 +268,5 @@ class Effect {
     const isHorizontal = this.state.animations.horizontal ? true : false;
     this.min = isHorizontal ? this.xMin : this.yMin;
     this.max = isHorizontal ? this.xMax : this.yMax;
-    console.log(this.min, this.max);
   }
 }
