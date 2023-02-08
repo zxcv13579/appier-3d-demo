@@ -8,6 +8,8 @@ const setting = {
     vertical: false,
     circle: false,
   },
+  small: false,
+  normal: false,
   ease: "none.none",
 };
 const initialValue = {
@@ -92,6 +94,7 @@ class Effect {
     this.onPointerOut = this.onPointerOut.bind(this);
     this.windowRaf = this.windowRaf.bind(this);
     this.setEase = this.setEase.bind(this);
+    this.switchSwing = this.switchSwing.bind(this);
 
     this.container.addEventListener("mousemove", this.onPointerMove);
     this.container.addEventListener("mouseout", this.onPointerOut);
@@ -137,12 +140,21 @@ class Effect {
     document.querySelector("#tool").append(this.guiInterface.domElement);
 
     this.guiInterface.add(this.state, "message");
-    this.guiInterface
+
+    const swingFolder = this.guiInterface.addFolder("swing");
+    swingFolder
+      .add(this.state, "small")
+      .listen()
+      .onChange((val) => this.switchSwing(val, "small"));
+    swingFolder
+      .add(this.state, "normal")
+      .listen()
+      .onChange((val) => this.switchSwing(val, "normal"));
+    swingFolder
       .add(this.state, "swing", -100, 100)
-      .onChange(this.setSwing);
-    this.guiInterface
-      .add(this.state, "pointerEvent")
-      .onChange(() => this.setDirectionCheck());
+      .listen()
+      .onChange(() => this.setSwing(true));
+
     const animationFolder = this.guiInterface.addFolder("動畫控制");
     for (let animation in this.state.animations) {
       animationFolder
@@ -157,7 +169,10 @@ class Effect {
         easeOut: "power1.out",
       })
       .onChange((val) => this.setEase(val));
-
+    this.guiInterface
+      .add(this.state, "pointerEvent")
+      .listen()
+      .onChange(() => this.setDirectionCheck());
     this.loop();
   }
 
@@ -170,30 +185,49 @@ class Effect {
     if (this.state.animations.none) return;
     this.loop();
   }
-
+  switchSwing(val, type) {
+    if (!this.state.small && !this.state.normal) return;
+    this.state.small = false;
+    this.state.normal = false;
+    this.state[type] = true;
+    if (type === "small") this.state.swing = 5;
+    if (type === "normal") this.state.swing = 10;
+    this.setSwing();
+  }
   loop() {
     if (!this.state.animations.circle) {
       const direction = this.state.animations.horizontal ? "x" : "y";
       this.displacementFilter.scale.x = 0;
       this.displacementFilter.scale.y = 0;
-      this.tl = gsap.timeline({ repeat: -1 });
-      this.tl
-        .to(this.displacementFilter.scale, {
-          [direction]: this.min,
-          duration: 0.25,
-          ease: "linear",
-        })
+      // 初始先移動到起點
+      gsap.to(this.displacementFilter.scale, {
+        [direction]: this.min,
+        duration: 0.25,
+        ease: "linear",
+      });
+      this.tl = gsap.timeline({ repeat: -1, yoyo: true });
+      this.tl.to(this.displacementFilter.scale, {
+        [direction]: this.max,
+        duration: 1,
+        ease: this.ease,
+      });
+      // this.tl
+      //   .to(this.displacementFilter.scale, {
+      //     [direction]: this.min,
+      //     duration: 0.25,
+      //     ease: "linear",
+      //   })
 
-        .to(this.displacementFilter.scale, {
-          [direction]: this.max,
-          duration: 0.5,
-          ease: "linear",
-        })
-        .to(this.displacementFilter.scale, {
-          [direction]: 0,
-          duration: 0.25,
-          ease: "linear",
-        });
+      //   .to(this.displacementFilter.scale, {
+      //     [direction]: this.max,
+      //     duration: 0.5,
+      //     ease: "linear",
+      //   })
+      //   .to(this.displacementFilter.scale, {
+      //     [direction]: 0,
+      //     duration: 0.25,
+      //     ease: "linear",
+      //   });
     } else {
       this.windowRaf();
     }
@@ -208,7 +242,12 @@ class Effect {
     this.raf = window.requestAnimationFrame(this.windowRaf);
   }
 
-  setSwing() {
+  setSwing(owner = false) {
+    if (owner) {
+      this.state.small = false;
+      this.state.normal = false;
+    }
+
     this.tl.kill();
     this.displacementFilter.scale.x = 0;
     this.displacementFilter.scale.y = 0;
@@ -260,6 +299,7 @@ class Effect {
   }
   calculateMinAndMax() {
     // 要計算 x、y 的 min max
+    console.log(this.state.swing);
     this.xMin = this.width / 2 / this.state.swing;
     this.xMax = (this.width / 2 - this.width) / this.state.swing;
     this.yMin = this.height / 2 / this.state.swing;
