@@ -165,7 +165,7 @@ class Effect {
     animationFolder
       .add(this.state, "ease", {
         linear: "none.none",
-        easeInOut: "power2.inOut",
+        easeInOut: "power1.inOut",
       })
       .onChange((val) => this.setEase(val));
     this.guiInterface
