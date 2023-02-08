@@ -236,8 +236,8 @@ class Effect {
   windowRaf() {
     const now = window.performance.now();
     this.displacementFilter.scale = {
-      x: Math.sin((now * Math.PI * 2) / 5 / 1000) * this.max,
-      y: Math.cos((now * Math.PI * 2) / 5 / 1000) * this.max,
+      x: Math.sin((now * Math.PI * 2) / 1 / 1000) * this.max,
+      y: Math.cos((now * Math.PI * 2) / 1 / 1000) * this.max,
     };
     this.raf = window.requestAnimationFrame(this.windowRaf);
   }
