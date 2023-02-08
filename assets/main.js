@@ -301,8 +301,8 @@ class Effect {
     console.log(this.state.swing);
     this.xMin = this.width / 2 / this.state.swing;
     this.xMax = (this.width / 2 - this.width) / this.state.swing;
-    this.yMin = this.height / 2 / this.state.swing;
-    this.yMax = (this.height / 2 - this.height) / this.state.swing;
+    this.yMin = (this.height / 2 - this.height) / this.state.swing;
+    this.yMax = this.height / 2 / this.state.swing;
 
     const isHorizontal = this.state.animations.horizontal ? true : false;
     this.min = isHorizontal ? this.xMin : this.yMin;
