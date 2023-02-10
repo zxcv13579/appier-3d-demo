@@ -10,7 +10,6 @@ const setting = {
   },
   small: false,
   normal: false,
-  ease: "none.none",
 };
 const initialValue = {
   o: "",
@@ -81,21 +80,17 @@ class Effect {
   yMin;
   yMax;
   raf;
-  ease;
 
   constructor() {
     this.create = this.create.bind(this);
     this.setSwing = this.setSwing.bind(this);
-
     this.setAnimationCheck = this.setAnimationCheck.bind(this);
     this.setDirectionCheck = this.setDirectionCheck.bind(this);
     this.setResize = this.setResize.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerOut = this.onPointerOut.bind(this);
     this.windowRaf = this.windowRaf.bind(this);
-    this.setEase = this.setEase.bind(this);
     this.switchSwing = this.switchSwing.bind(this);
-
     this.container.addEventListener("mousemove", this.onPointerMove);
     this.container.addEventListener("mouseout", this.onPointerOut);
   }
@@ -109,8 +104,7 @@ class Effect {
     this.app.loader.add("deep", initialValue.deep);
     this.app.loader.load((loader, resource) => this.create());
   }
-  create(resource) {
-    // 場景 1
+  create() {
     this.app.stage.addChild(this.scene);
     this.scene_origin = new PIXI.Sprite(
       new PIXI.Texture.from(initialValue.origin)
@@ -162,26 +156,10 @@ class Effect {
         .listen()
         .onChange(() => this.setAnimationCheck(animation));
     }
-    animationFolder
-      .add(this.state, "ease", {
-        linear: "none.none",
-        easeInOut: "power1.inOut",
-      })
-      .onChange((val) => this.setEase(val));
     this.guiInterface
       .add(this.state, "pointerEvent")
       .listen()
-      .onChange(() => this.setDirectionCheck());
-    this.loop();
-  }
-
-  setEase(val) {
-    this.ease = val;
-    this.tl.kill();
-    this.displacementFilter.scale.x = 0;
-    this.displacementFilter.scale.y = 0;
-    this.calculateMinAndMax();
-    if (this.state.animations.none) return;
+      .onChange(this.setDirectionCheck);
     this.loop();
   }
   switchSwing(val, type) {
@@ -208,25 +186,8 @@ class Effect {
       this.tl.to(this.displacementFilter.scale, {
         [direction]: this.max,
         duration: 1,
-        ease: this.ease,
+        ease: "power1.inOut",
       });
-      // this.tl
-      //   .to(this.displacementFilter.scale, {
-      //     [direction]: this.min,
-      //     duration: 0.25,
-      //     ease: "linear",
-      //   })
-
-      //   .to(this.displacementFilter.scale, {
-      //     [direction]: this.max,
-      //     duration: 0.5,
-      //     ease: "linear",
-      //   })
-      //   .to(this.displacementFilter.scale, {
-      //     [direction]: 0,
-      //     duration: 0.25,
-      //     ease: "linear",
-      //   });
     } else {
       this.windowRaf();
     }
@@ -297,7 +258,7 @@ class Effect {
     this.loop();
   }
   calculateMinAndMax() {
-    // 要計算 x、y 的 min max
+    // 計算 x、y 的 min max
     console.log(this.state.swing);
     this.xMin = this.width / 2 / this.state.swing;
     this.xMax = (this.width / 2 - this.width) / this.state.swing;
