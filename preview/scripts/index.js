@@ -14,7 +14,7 @@ class Effect extends Template {
   fingerHolding = false;
   min;
   max;
-  cycleTime = this.insDataSetting["data-cycle-time"];
+  AnimateTime = this.insDataSetting["data-animate-time"];
   delay = 5;
   direction;
   idleTimer;
@@ -88,7 +88,7 @@ class Effect extends Template {
       gsap.to(this.displacementFilter.scale, {
         x: 0,
         y: 0,
-        duration: this.cycleTime / 2,
+        duration: this.AnimateTime / 2,
         ease: "linear",
         onComplete: this.doCircularAnimate,
       });
@@ -99,7 +99,7 @@ class Effect extends Template {
     gsap.to(this.displacementFilter.scale, {
       [this.direction]: this.min,
       [otherDirection]: 0,
-      duration: this.cycleTime / 2,
+      duration: this.AnimateTime / 2,
       ease: "linear",
       onComplete: this.doAnimate,
     });
@@ -113,12 +113,12 @@ class Effect extends Template {
     this.tl
       .to(this.displacementFilter.scale, {
         [this.direction]: this.max,
-        duration: this.cycleTime / 2,
+        duration: this.AnimateTime / 2,
         ease: "linear",
       })
       .to(this.displacementFilter.scale, {
         [this.direction]: this.min,
-        duration: this.cycleTime / 2,
+        duration: this.AnimateTime / 2,
         ease: "linear",
         onComplete: this.doAnimate,
       });
