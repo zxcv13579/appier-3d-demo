@@ -19,6 +19,16 @@ class Effect extends Template {
   direction;
   idleTimer;
   circularRef;
+  // config = [
+  //   {
+  //     name: "original",
+  //     url:
+  //   },
+  //   {
+  //     name: "depth",
+  //     url: `./assets/images/${this.insDataSetting["data-depth-img"]}.jpg`,
+  //   },
+  // ];
 
   constructor() {
     super();
@@ -52,11 +62,24 @@ class Effect extends Template {
     console.log("[3d effect is loaded]");
     console.log("[3d effect insDataSetting] ", this.insDataSetting);
 
+    // this.app.loader.add(
+    //   "origin",
+    //   `./assets/images/${this.insDataSetting["data-original-img"]}.jpg`
+    // );
+    // this.app.loader.add(
+    //   "depth",
+    //   `./assets/images/${this.insDataSetting["data-depth-img"]}.jpg`
+    // );
+    // this.app.loader.load((loader, resource) => {
+
+    // });
+
+    // loader = new Loader(this.app.loader, this.config);
+
     this.init();
   }
   init() {
     this.app.stage.addChild(this.scene);
-
     // loader
     const depth_img = new PIXI.Sprite(
       new PIXI.Texture.from(`./assets/images/depth.jpg`)
@@ -84,7 +107,7 @@ class Effect extends Template {
   }
   toMinPosition() {
     if (this.insDataSetting["data-animate-type"] === "circular") {
-      // 執行 circular 先回原點，並歸零 t
+      // 執行 circular 先回原點
       gsap.to(this.displacementFilter.scale, {
         x: 0,
         y: 0,

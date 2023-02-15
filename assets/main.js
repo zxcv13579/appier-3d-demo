@@ -196,6 +196,8 @@ class Effect {
         ease: "linear",
         onComplete: this.loop,
       });
+    } else {
+      this.windowRaf();
     }
   }
   loop() {
@@ -285,11 +287,10 @@ class Effect {
   onPointerOut() {
     this.executed = true;
     if (this.state.animations.none || this.state.pointerEvent) return;
-
     this.pointerTimer = setTimeout(() => {
-      if (!this.state.animations.circle) {
-        this.toMinPosition();
-      }
+      // if (!this.state.animations.circle) {
+      this.toMinPosition();
+      // }
       clearTimeout(this.pointerTimer);
     }, 5000);
   }
