@@ -80,6 +80,7 @@ class Effect {
   yMin;
   yMax;
   raf;
+  pointerTimer;
 
   constructor() {
     this.create = this.create.bind(this);
@@ -91,6 +92,7 @@ class Effect {
     this.onPointerOut = this.onPointerOut.bind(this);
     this.windowRaf = this.windowRaf.bind(this);
     this.switchSwing = this.switchSwing.bind(this);
+    this.loop = this.loop.bind(this);
     this.container.addEventListener("mousemove", this.onPointerMove);
     this.container.addEventListener("mouseout", this.onPointerOut);
   }
@@ -139,15 +141,27 @@ class Effect {
     swingFolder
       .add(this.state, "small")
       .listen()
-      .onChange((val) => this.switchSwing(val, "small"));
+      .onChange((val) => {
+        this.displacementFilter.scale.x = 0;
+        this.displacementFilter.scale.y = 0;
+        this.switchSwing(val, "small");
+      });
     swingFolder
       .add(this.state, "normal")
       .listen()
-      .onChange((val) => this.switchSwing(val, "normal"));
+      .onChange((val) => {
+        this.displacementFilter.scale.x = 0;
+        this.displacementFilter.scale.y = 0;
+        this.switchSwing(val, "normal");
+      });
     swingFolder
       .add(this.state, "swing", -100, 100)
       .listen()
-      .onChange(() => this.setSwing(true));
+      .onChange(() => {
+        this.displacementFilter.scale.x = 0;
+        this.displacementFilter.scale.y = 0;
+        this.setSwing(true);
+      });
 
     const animationFolder = this.guiInterface.addFolder("動畫控制");
     for (let animation in this.state.animations) {
@@ -171,23 +185,36 @@ class Effect {
     if (type === "normal") this.state.swing = 10;
     this.setSwing();
   }
+  toMinPosition() {
+    if (!this.state.animations.circle) {
+      const direction = this.state.animations.horizontal ? "x" : "y";
+      const otherDirection = !this.state.animations.horizontal ? "x" : "y";
+      gsap.to(this.displacementFilter.scale, {
+        [direction]: this.min,
+        [otherDirection]: 0,
+        duration: 0.5,
+        ease: "linear",
+        onComplete: this.loop,
+      });
+    }
+  }
   loop() {
     if (!this.state.animations.circle) {
       const direction = this.state.animations.horizontal ? "x" : "y";
-      this.displacementFilter.scale.x = 0;
-      this.displacementFilter.scale.y = 0;
-      // 初始先移動到起點
-      gsap.to(this.displacementFilter.scale, {
-        [direction]: this.min,
-        duration: 0.25,
-        ease: "linear",
-      });
-      this.tl = gsap.timeline({ repeat: -1, yoyo: true });
-      this.tl.to(this.displacementFilter.scale, {
-        [direction]: this.max,
-        duration: 1,
-        ease: "power1.inOut",
-      });
+      this.tl = gsap.timeline();
+
+      this.tl
+        .to(this.displacementFilter.scale, {
+          [direction]: this.max,
+          duration: 0.5,
+          ease: "power1.inOut",
+        })
+        .to(this.displacementFilter.scale, {
+          [direction]: this.min,
+          duration: 0.5,
+          ease: "power1.inOut",
+          onComplete: this.loop,
+        });
     } else {
       this.windowRaf();
     }
@@ -245,25 +272,33 @@ class Effect {
     if (this.executed) {
       this.tl.kill();
       window.cancelAnimationFrame(this.raf);
+
       this.executed = false;
     }
+    if (this.pointerTimer) clearTimeout(this.pointerTimer);
+
     this.displacementFilter.scale.x =
       (this.width / 2 - e.clientX) / this.state.swing;
     this.displacementFilter.scale.y =
-      (this.height / 2 - e.clientY) / this.state.swing;
+      -(this.height / 2 - e.clientY) / this.state.swing;
   }
   onPointerOut() {
     this.executed = true;
     if (this.state.animations.none || this.state.pointerEvent) return;
-    this.loop();
+
+    this.pointerTimer = setTimeout(() => {
+      if (!this.state.animations.circle) {
+        this.toMinPosition();
+      }
+      clearTimeout(this.pointerTimer);
+    }, 5000);
   }
   calculateMinAndMax() {
     // 計算 x、y 的 min max
-    console.log(this.state.swing);
     this.xMin = this.width / 2 / this.state.swing;
     this.xMax = (this.width / 2 - this.width) / this.state.swing;
-    this.yMin = (this.height / 2 - this.height) / this.state.swing;
-    this.yMax = this.height / 2 / this.state.swing;
+    this.yMin = this.height / 2 / this.state.swing;
+    this.yMax = (this.height / 2 - this.height) / this.state.swing;
 
     const isHorizontal = this.state.animations.horizontal ? true : false;
     this.min = isHorizontal ? this.xMin : this.yMin;

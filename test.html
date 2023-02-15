@@ -31,14 +31,16 @@
   });
   document.querySelector("#container").appendChild(app.view);
 
+  // app > container > texture
+
   const scene = new PIXI.Container();
   app.stage.addChild(scene);
-  // 先 add depth 進 scene
+
+  // img loader
   const depthImg = new PIXI.Sprite(
     new PIXI.Texture.from(`./assets/images/${target}-2.jpg`)
   );
   scene.addChild(depthImg);
-  // 後 add img 進 scene
   const img = new PIXI.Sprite(
     new PIXI.Texture.from(`./assets/images/${target}-1.jpg`)
   );
@@ -47,10 +49,13 @@
   const displacementFilter = new PIXI.filters.DisplacementFilter(depthImg);
   displacementFilter.scale.x = 0;
   displacementFilter.scale.y = 0;
+
   scene.filters = [displacementFilter];
 
-  document.querySelector("#container").addEventListener("mousemove", (e) => {
-    displacementFilter.scale.x = (window.innerWidth / 2 - e.clientX) / 20;
-    displacementFilter.scale.y = (window.innerHeight / 2 - e.clientY) / 20;
+  document.querySelector("canvas").addEventListener("mousemove", (e) => {
+    displacementFilter.scale.x = (config[target].width / 2 - e.clientX) / 20;
+    displacementFilter.scale.y = (config[target].height / 2 - e.clientY) / 20;
+
+    console.log(displacementFilter.scale.x);
   });
 </script>
